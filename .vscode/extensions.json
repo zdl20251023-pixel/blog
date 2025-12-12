@@ -1,0 +1,13 @@
+{
+    "recommendations": [
+      // 必装，配置见 readme.md Vscode Plugins
+      "dbaeumer.vscode-eslint", // eslint 格式校验
+      "esbenp.prettier-vscode", // prettier 文件格式化
+  
+      // 选装
+      "oven.bun-vscode", //  bun 开发支持
+      "alefragnani.project-manager", // 本地项目管理， 支持指定目录扫描 git 项目，也支持自定义目录。
+      "eamodio.gitlens" // git 插件支持
+    ]
+  }
+  

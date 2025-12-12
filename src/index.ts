@@ -1,13 +1,14 @@
 // 应用入口文件
 import { Elysia } from "elysia";
-import { articleRoutes, commentRoutes, userRoutes } from "./routes";
-
+import { userController } from "./modules/user/controller"; // 用户控制器
+import { articleController } from "./modules/article/controller"; // 文章控制器
+import { commentController } from "./modules/comment/controller"; // 评论控制器
+import { demoController } from "./modules/demo/controller"; // 演示控制器
 const app = new Elysia()
-  .use(userRoutes)
-  .use(articleRoutes)
-  .use(commentRoutes)
-  .get("/", () => "Hello Elysia")
-  .get("/user/:id", ({ params: { id } }) => id)
+  .use(demoController)
+  .use(userController)  
+  .use(articleController)
+  .use(commentController) 
   .listen(8000);
 
 console.log(

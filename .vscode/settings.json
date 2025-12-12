@@ -1,0 +1,15 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "editor.formatOnSave": true, // 保存时自动格式化代码（默认调用 formatter，比如 Prettier）  
+  "editor.tabSize": 2, // 设置缩进为 2 个空格
+  "editor.insertSpaces": true // 用空格替代 Tab
+}
