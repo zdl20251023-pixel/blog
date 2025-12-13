@@ -1,0 +1,89 @@
+services:
+  # MySQL 数据库服务
+  mysql:
+    image: mysql:8.0
+    container_name: blog-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      # MySQL root 用户密码
+      MYSQL_ROOT_PASSWORD: root
+      # 创建默认数据库
+      MYSQL_DATABASE: blog
+      # 可选：创建普通用户（推荐生产环境使用）
+      MYSQL_USER: zdl
+      MYSQL_PASSWORD: 123456
+      # 设置字符集
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+      # 时区设置
+      TZ: Asia/Shanghai
+    volumes:
+      # 数据持久化目录
+      - ./mysql/data:/var/lib/mysql
+      # 可选：自定义配置文件
+      # - ./mysql/config:/etc/mysql/conf.d
+      # 可选：初始化SQL脚本目录
+      # - ./mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - blog-network
+    healthcheck:
+      # 健康检查，确保MySQL已完全启动
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command:
+      # MySQL 8.0 配置参数
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+      - --max-connections=200
+      - --innodb-buffer-pool-size=256M
+
+  # Redis 缓存服务
+  redis:
+    image: redis:8.4-alpine
+    container_name: blog-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      # Redis 数据持久化目录
+      - ./redis/data:/data
+      # 可选：Redis 配置文件
+      # - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - blog-network
+    healthcheck:
+      # 健康检查，确保Redis正常运行（带密码）
+      test: ["CMD", "redis-cli", "-a", "123456", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    command:
+      # Redis 配置命令
+      - redis-server
+      # 启用数据持久化（AOF模式，更安全）
+      - --appendonly
+      - "yes"
+      # 可选：设置密码（生产环境推荐）
+      - --requirepass
+      - "123456"
+      # 可选：最大内存限制
+      - --maxmemory
+      - "256mb"
+      - --maxmemory-policy
+      - "allkeys-lru"
+    environment:
+      # 时区设置
+      TZ: Asia/Shanghai
+
+# 网络配置
+networks:
+  blog-network:
+    driver: bridge
+    name: blog-network

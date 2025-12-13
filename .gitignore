@@ -32,3 +32,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Finder (MacOS) folder config
 .DS_Store
+
+# Docker 数据目录（不要提交数据库数据）
+docker/mysql/data/
+docker/redis/data/
