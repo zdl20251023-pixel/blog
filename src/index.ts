@@ -16,6 +16,13 @@ const app = new Elysia()
     // excludeTags: ["article"],  // 注：使用指定标签排除暂时不能用
   }))
   .get("/", () => "Hello Elysia")
+  .get("/:id", (Context) => {
+    console.log(JSON.stringify(Context, null, 2));
+    return {
+      id: Context.params.id,
+      query: Context.query,
+    };
+  })
   .use(demoController)
   .use(userController)
   .use(articleController)

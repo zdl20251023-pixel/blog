@@ -4,7 +4,7 @@ import { demo_get_rsp } from "./modle";
 import { DemoService } from "./service";
 
 export const demoController = new Elysia({ prefix: "/api/demo" })
-    .get("/", async ({ }) => {
+    .get("/", async () => {
         const [code, data] = await DemoService.getDemo();
         // 原始写法
         // return { code, data };
