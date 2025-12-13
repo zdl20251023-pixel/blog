@@ -27,7 +27,7 @@ export const demoController = new Elysia({ prefix: "/api/demo" })
         // 使用通用函数，data 可以为 null
         response: {
             200: createResponseSchema(demo_get_rsp)
-        }
+        },
         // 可以定义多个响应状态码
         // response: {
         //     200: t.Object({
@@ -39,11 +39,21 @@ export const demoController = new Elysia({ prefix: "/api/demo" })
         //         data: demo_get_rsp
         //     })
         // }
+        detail: {
+            tags: ["demo"],
+            summary: "获取演示数据",
+            description: "获取演示数据",
+        },
     })
     .get("/:id", ({ params: { id } }) => id, {
         // params: t.Object({
         //     id: t.Number()
         // })
+        detail: {
+            tags: ["demo"],
+            summary: "获取演示数据",
+            description: "获取演示数据",
+        },
     })
     // // 多参数
     // // 测试用例 http://localhost:8000/api/demo/3abc/22
@@ -60,8 +70,20 @@ export const demoController = new Elysia({ prefix: "/api/demo" })
     //     // params: t.Object({
     //     //     id: t.Number()
     //     // })
-    // })
-    .post("/", ({ body }) => body)
+    // })    
+    .post("/", ({ body }) => body, {
+        detail: {
+            tags: ["demo"],
+            summary: "创建演示数据",
+            description: "创建演示数据",
+        },
+    })
     .delete("/:id", ({ params: { id } }) => {
         return { id };
+    }, {
+        detail: {
+            tags: ["demo"],
+            summary: "删除演示数据",
+            description: "删除演示数据",
+        },
     })
