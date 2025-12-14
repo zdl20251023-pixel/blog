@@ -16,7 +16,7 @@ _.log
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # dotenv environment variable files
-.env
+# .env
 .env.development.local
 .env.test.local
 .env.production.local
@@ -36,3 +36,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # Docker 数据目录（不要提交数据库数据）
 docker/mysql/data/
 docker/redis/data/
+
+# mysql
+drizzle/migrations/

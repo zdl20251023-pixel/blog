@@ -1,6 +1,7 @@
 // 应用入口文件
 import swagger from "@elysiajs/swagger";
 import { Elysia } from "elysia";
+import { db } from "./lib/db";
 import { articleController } from "./modules/article/controller"; // 文章控制器
 import { commentController } from "./modules/comment/controller"; // 评论控制器
 import { demoController } from "./modules/demo/controller"; // 演示控制器
@@ -15,6 +16,7 @@ const app = new Elysia()
     // exclude: ["/", "/^\/api\/article/"],  // 注：使用正则表达式排除，但是无法正常排除
     // excludeTags: ["article"],  // 注：使用指定标签排除暂时不能用
   }))
+  .decorate("db", db)
   .get("/", () => "Hello Elysia")
   .get("/:id", (Context) => {
     console.log(JSON.stringify(Context, null, 2));

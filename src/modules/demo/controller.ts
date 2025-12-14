@@ -1,11 +1,11 @@
 import Elysia from "elysia";
 import { createResponseSchema, responseFromService } from "../../utils/response";
-import { demo_get_rsp } from "./modle";
+import { demo_get_rsp, demo_post_body, demo_post_rsp } from "./modle";
 import { DemoService } from "./service";
 
 export const demoController = new Elysia({ prefix: "/api/demo" })
     .get("/", async () => {
-        const [code, data] = await DemoService.getDemo();
+        const [code, data] = await DemoService.get();
         // 原始写法
         // return { code, data };
         // 使用通用函数
@@ -71,7 +71,15 @@ export const demoController = new Elysia({ prefix: "/api/demo" })
     //     //     id: t.Number()
     //     // })
     // })    
-    .post("/", ({ body }) => body, {
+    .post("/", async ({ body }) => {
+        console.log("body", body);
+        const [code, data] = await DemoService.post(body);
+        return responseFromService(code, data);
+    }, {
+        body: demo_post_body,
+        response: {
+            200: createResponseSchema(demo_post_rsp),
+        },
         detail: {
             tags: ["demo"],
             summary: "创建演示数据",
