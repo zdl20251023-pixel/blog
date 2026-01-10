@@ -1,11 +1,13 @@
 // 应用入口文件
 import swagger from "@elysiajs/swagger";
 import { Elysia } from "elysia";
+import { configTables } from "./lib/config-tables"; // 配置表实例
 import { db } from "./lib/db";
 import { articleController } from "./modules/article/controller"; // 文章控制器
 import { commentController } from "./modules/comment/controller"; // 评论控制器
 import { demoController } from "./modules/demo/controller"; // 演示控制器
 import { userController } from "./modules/user/controller"; // 用户控制器
+
 const app = new Elysia()
   .use(swagger({
     version: "1.0.0",
@@ -17,7 +19,30 @@ const app = new Elysia()
     // excludeTags: ["article"],  // 注：使用指定标签排除暂时不能用
   }))
   .decorate("db", db)
+  .decorate("tables", configTables) // 注入配置表实例，可在路由中通过 context.tables 访问
   .get("/", () => "Hello Elysia")
+  // 配置表测试路由 - 用于验证配置表是否正常加载
+  .get("/test/config-tables", ({ tables }) => {
+    return {
+      success: true,
+      message: "配置表加载成功",
+      stats: {
+        itemCount: tables.Tbitem.getDataList().length,
+        rewardCount: tables.Tbreward.getDataList().length,
+      },
+      sampleData: {
+        item: tables.Tbitem.get(1001) || null,
+        itemId: tables.Tbitem.get(1001)?.id || null,
+        reward: tables.Tbreward.get(1001) || null,
+      },
+    };
+  }, {
+    detail: {
+      tags: ["测试"],
+      summary: "验证配置表加载",
+      description: "验证 Luban 导表数据是否正常加载",
+    },
+  })
   .get("/:id", (Context) => {
     console.log(JSON.stringify(Context, null, 2));
     return {
