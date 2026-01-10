@@ -7,6 +7,7 @@ import { articleController } from "./modules/article/controller"; // 文章控�
 import { commentController } from "./modules/comment/controller"; // 评论控制器
 import { demoController } from "./modules/demo/controller"; // 演示控制器
 import { userController } from "./modules/user/controller"; // 用户控制器
+import { Circle, Rect } from "./output_code/schema";
 
 const app = new Elysia()
   .use(swagger({
@@ -23,6 +24,21 @@ const app = new Elysia()
   .get("/", () => "Hello Elysia")
   // 配置表测试路由 - 用于验证配置表是否正常加载
   .get("/test/config-tables", ({ tables }) => {
+    const item = tables.Tbitem.get(1001);
+    // 使用类型守卫检查是否为 Circle 类型
+    if (item && item.s1 instanceof Circle) {
+      console.log(JSON.stringify(item, null, 2), item.s1.radius);
+    } else if (item && item.s1 instanceof Rect) {
+      console.log(JSON.stringify(item, null, 2), `Rect: ${item.s1.width}x${item.s1.height}`);
+    }
+    const reward = tables.Tbreward.get(1001);
+    reward?.m1.forEach((value, key) => {
+      console.log(key, value);
+    });
+    const value = reward?.m1.get(2);
+    console.log(value);
+    // 访问常量
+    console.log("x8", tables.Tbconstant.getDataList()[0]?.x8);
     return {
       success: true,
       message: "配置表加载成功",
