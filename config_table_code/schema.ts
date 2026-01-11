@@ -111,6 +111,62 @@ export class constant {
 
 
 export namespace demo {
+export class ConstantOne {
+
+    constructor(_json_: any) {
+        if (_json_.x1 === undefined) { throw new Error() }
+        this.x1 = _json_.x1
+        if (_json_.x2 === undefined) { throw new Error() }
+        this.x2 = _json_.x2
+        if (_json_.x3 === undefined) { throw new Error() }
+        this.x3 = _json_.x3
+        if (_json_.x4 === undefined) { throw new Error() }
+        this.x4 = _json_.x4
+        if (_json_.x5 === undefined) { throw new Error() }
+        this.x5 = _json_.x5
+        if (_json_.x6 === undefined) { throw new Error() }
+        this.x6 = _json_.x6
+        if (_json_.x7 === undefined) { throw new Error() }
+        { this.x7 = []; for(let _ele0 of _json_.x7) { let _e0; _e0 = _ele0; this.x7.push(_e0);}}
+        if (_json_.x8 === undefined) { throw new Error() }
+        this.x8 = _json_.x8
+        if (_json_.x9 === undefined) { throw new Error() }
+        this.x9 = _json_.x9
+    }
+
+    /**
+     * 参数1
+     */
+    readonly x1: number
+    /**
+     * 道具
+     */
+    readonly x2: number
+    readonly x3: number
+    readonly x4: number
+    readonly x5: number
+    readonly x6: number
+    readonly x7: number[]
+    readonly x8: string
+    readonly x9: number
+
+    resolve(tables:Tables) {
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    }
+}
+
+}
+
+
+export namespace demo {
 export class item {
 
     constructor(_json_: any) {
@@ -132,6 +188,12 @@ export class item {
         this.s1 = Shape.constructorFrom(_json_.s1)
         if (_json_.x4 === undefined) { throw new Error() }
         this.x4 = new vector2(_json_.x4)
+        if (_json_.desc2 === undefined) { throw new Error() }
+        this.desc2 = _json_.desc2
+        if (_json_.x5 === undefined) { throw new Error() }
+        this.x5 = _json_.x5
+        if (_json_.x6 === undefined) { throw new Error() }
+        this.x6 = _json_.x6
     }
 
     /**
@@ -155,6 +217,9 @@ export class item {
     readonly x3: test.Item[]
     readonly s1: Shape
     readonly x4: vector2
+    readonly desc2: string
+    readonly x5: number
+    readonly x6: boolean
 
     resolve(tables:Tables) {
         
@@ -165,6 +230,83 @@ export class item {
         
         for (let _e of this.x3) { _e?.resolve(tables); }
         this.s1?.resolve(tables);
+        
+        
+        
+        
+    }
+}
+
+}
+
+
+export namespace demo {
+export class Manykey {
+
+    constructor(_json_: any) {
+        if (_json_.id === undefined) { throw new Error() }
+        this.id = _json_.id
+        if (_json_.name === undefined) { throw new Error() }
+        this.name = _json_.name
+        if (_json_.desc === undefined) { throw new Error() }
+        this.desc = _json_.desc
+        if (_json_.count === undefined) { throw new Error() }
+        this.count = _json_.count
+        if (_json_.x1 === undefined) { throw new Error() }
+        { this.x1 = []; for(let _ele0 of _json_.x1) { let _e0; _e0 = _ele0; this.x1.push(_e0);}}
+        if (_json_.x2 === undefined) { throw new Error() }
+        { this.x2 = []; for(let _ele0 of _json_.x2) { let _e0; _e0 = _ele0; this.x2.push(_e0);}}
+        if (_json_.x3 === undefined) { throw new Error() }
+        { this.x3 = []; for(let _ele0 of _json_.x3) { let _e0; _e0 = new test.Item(_ele0); this.x3.push(_e0);}}
+        if (_json_.s1 === undefined) { throw new Error() }
+        this.s1 = Shape.constructorFrom(_json_.s1)
+        if (_json_.x4 === undefined) { throw new Error() }
+        this.x4 = new vector2(_json_.x4)
+        if (_json_.desc2 === undefined) { throw new Error() }
+        this.desc2 = _json_.desc2
+        if (_json_.x5 === undefined) { throw new Error() }
+        this.x5 = _json_.x5
+        if (_json_.x6 === undefined) { throw new Error() }
+        this.x6 = _json_.x6
+    }
+
+    /**
+     * id
+     */
+    readonly id: number
+    /**
+     * 名称
+     */
+    readonly name: string
+    /**
+     * 描述
+     */
+    readonly desc: string
+    /**
+     * 个数
+     */
+    readonly count: number
+    readonly x1: number[]
+    readonly x2: number[]
+    readonly x3: test.Item[]
+    readonly s1: Shape
+    readonly x4: vector2
+    readonly desc2: string
+    readonly x5: number
+    readonly x6: boolean
+
+    resolve(tables:Tables) {
+        
+        
+        
+        
+        
+        
+        for (let _e of this.x3) { _e?.resolve(tables); }
+        this.s1?.resolve(tables);
+        
+        
+        
         
     }
 }
@@ -208,6 +350,80 @@ export class manyRow10000 {
 
     resolve(tables:Tables) {
         
+        
+        
+        
+        
+    }
+}
+
+}
+
+
+export namespace demo {
+export class One {
+
+    constructor(_json_: any) {
+        if (_json_.id === undefined) { throw new Error() }
+        this.id = _json_.id
+        if (_json_.name === undefined) { throw new Error() }
+        this.name = _json_.name
+        if (_json_.desc === undefined) { throw new Error() }
+        this.desc = _json_.desc
+        if (_json_.count === undefined) { throw new Error() }
+        this.count = _json_.count
+        if (_json_.x1 === undefined) { throw new Error() }
+        { this.x1 = []; for(let _ele0 of _json_.x1) { let _e0; _e0 = _ele0; this.x1.push(_e0);}}
+        if (_json_.x2 === undefined) { throw new Error() }
+        { this.x2 = []; for(let _ele0 of _json_.x2) { let _e0; _e0 = _ele0; this.x2.push(_e0);}}
+        if (_json_.x3 === undefined) { throw new Error() }
+        { this.x3 = []; for(let _ele0 of _json_.x3) { let _e0; _e0 = new test.Item(_ele0); this.x3.push(_e0);}}
+        if (_json_.s1 === undefined) { throw new Error() }
+        this.s1 = Shape.constructorFrom(_json_.s1)
+        if (_json_.x4 === undefined) { throw new Error() }
+        this.x4 = new vector2(_json_.x4)
+        if (_json_.desc2 === undefined) { throw new Error() }
+        this.desc2 = _json_.desc2
+        if (_json_.x5 === undefined) { throw new Error() }
+        this.x5 = _json_.x5
+        if (_json_.x6 === undefined) { throw new Error() }
+        this.x6 = _json_.x6
+    }
+
+    /**
+     * id
+     */
+    readonly id: number
+    /**
+     * 名称
+     */
+    readonly name: string
+    /**
+     * 描述
+     */
+    readonly desc: string
+    /**
+     * 个数
+     */
+    readonly count: number
+    readonly x1: number[]
+    readonly x2: number[]
+    readonly x3: test.Item[]
+    readonly s1: Shape
+    readonly x4: vector2
+    readonly desc2: string
+    readonly x5: number
+    readonly x6: boolean
+
+    resolve(tables:Tables) {
+        
+        
+        
+        
+        
+        
+        for (let _e of this.x3) { _e?.resolve(tables); }
+        this.s1?.resolve(tables);
         
         
         
@@ -494,6 +710,121 @@ export class vector4 {
 
 
 export namespace demo {
+/**
+ * 联合索引
+ */
+export class TbManyKey {
+    private _dataList: demo.Manykey[]
+    
+    constructor(_json_: any) {
+        this._dataList = []
+        for(var _json2_ of _json_) {
+            let _v: demo.Manykey
+            _v = new demo.Manykey(_json2_)
+            this._dataList.push(_v)
+        }
+    }
+
+    getDataList(): demo.Manykey[] { return this._dataList }
+
+    get(index: number): demo.Manykey | undefined { return this._dataList[index] }
+    
+    resolve(tables:Tables) {
+        for(let  data of this._dataList)
+        {
+            data.resolve(tables)
+        }
+    }
+
+}
+}
+
+
+export namespace demo {
+/**
+ * 行的结构单例
+ */
+export class TbOne {
+
+    private _data: demo.One
+    constructor(_json_: any) {
+        if (_json_.length != 1) throw new Error('table mode=one, but size != 1')
+        this._data = new demo.One(_json_[0])
+    }
+
+    getData(): demo.One { return this._data; }
+
+    /**
+     * id
+     */
+    get  id(): number { return this._data.id; }
+    /**
+     * 名称
+     */
+    get  name(): string { return this._data.name; }
+    /**
+     * 描述
+     */
+    get  desc(): string { return this._data.desc; }
+    /**
+     * 个数
+     */
+    get  count(): number { return this._data.count; }
+    get  x1(): number[] { return this._data.x1; }
+    get  x2(): number[] { return this._data.x2; }
+    get  x3(): test.Item[] { return this._data.x3; }
+    get  s1(): Shape { return this._data.s1; }
+    get  x4(): vector2 { return this._data.x4; }
+    get  desc2(): string { return this._data.desc2; }
+    get  x5(): number { return this._data.x5; }
+    get  x6(): boolean { return this._data.x6; }
+
+    resolve(tables:Tables)
+    {
+        this._data.resolve(tables)
+    }
+    
+}
+}
+
+
+export namespace demo {
+export class TbConstantOne {
+
+    private _data: demo.ConstantOne
+    constructor(_json_: any) {
+        if (_json_.length != 1) throw new Error('table mode=one, but size != 1')
+        this._data = new demo.ConstantOne(_json_[0])
+    }
+
+    getData(): demo.ConstantOne { return this._data; }
+
+    /**
+     * 参数1
+     */
+    get  x1(): number { return this._data.x1; }
+    /**
+     * 道具
+     */
+    get  x2(): number { return this._data.x2; }
+    get  x3(): number { return this._data.x3; }
+    get  x4(): number { return this._data.x4; }
+    get  x5(): number { return this._data.x5; }
+    get  x6(): number { return this._data.x6; }
+    get  x7(): number[] { return this._data.x7; }
+    get  x8(): string { return this._data.x8; }
+    get  x9(): number { return this._data.x9; }
+
+    resolve(tables:Tables)
+    {
+        this._data.resolve(tables)
+    }
+    
+}
+}
+
+
+export namespace demo {
 export class Tbconstant {
     private _dataMap: Map<number, demo.constant>
     private _dataList: demo.constant[]
@@ -621,6 +952,18 @@ export class Tbreward {
 type JsonLoader = (file: string) => any
 
 export class Tables {
+    private _TbManyKey: demo.TbManyKey
+    /**
+     * 联合索引
+     */
+    get TbManyKey(): demo.TbManyKey  { return this._TbManyKey;}
+    private _TbOne: demo.TbOne
+    /**
+     * 行的结构单例
+     */
+    get TbOne(): demo.TbOne  { return this._TbOne;}
+    private _TbConstantOne: demo.TbConstantOne
+    get TbConstantOne(): demo.TbConstantOne  { return this._TbConstantOne;}
     private _Tbconstant: demo.Tbconstant
     get Tbconstant(): demo.Tbconstant  { return this._Tbconstant;}
     private _Tbitem: demo.Tbitem
@@ -631,11 +974,17 @@ export class Tables {
     get Tbreward(): demo.Tbreward  { return this._Tbreward;}
 
     constructor(loader: JsonLoader) {
+        this._TbManyKey = new demo.TbManyKey(loader('demo_tbmanykey'))
+        this._TbOne = new demo.TbOne(loader('demo_tbone'))
+        this._TbConstantOne = new demo.TbConstantOne(loader('demo_tbconstantone'))
         this._Tbconstant = new demo.Tbconstant(loader('demo_tbconstant'))
         this._Tbitem = new demo.Tbitem(loader('demo_tbitem'))
         this._TbmanyRow10000 = new demo.TbmanyRow10000(loader('demo_tbmanyrow10000'))
         this._Tbreward = new demo.Tbreward(loader('demo_tbreward'))
 
+        this._TbManyKey.resolve(this)
+        this._TbOne.resolve(this)
+        this._TbConstantOne.resolve(this)
         this._Tbconstant.resolve(this)
         this._Tbitem.resolve(this)
         this._TbmanyRow10000.resolve(this)
