@@ -39,6 +39,8 @@ const app = new Elysia()
     console.log(value);
     // 访问常量
     console.log("x8", tables.Tbconstant.getDataList()[0]?.x8);
+    const x3 = tables.TbConstantOne.x3
+    console.log("x3", x3);
     return {
       success: true,
       message: "配置表加载成功",
