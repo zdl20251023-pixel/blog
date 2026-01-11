@@ -173,6 +173,52 @@ export class item {
 
 
 export namespace demo {
+export class manyRow10000 {
+
+    constructor(_json_: any) {
+        if (_json_.id === undefined) { throw new Error() }
+        this.id = _json_.id
+        if (_json_.id2 === undefined) { throw new Error() }
+        this.id2 = _json_.id2
+        if (_json_.name === undefined) { throw new Error() }
+        this.name = _json_.name
+        if (_json_.desc === undefined) { throw new Error() }
+        this.desc = _json_.desc
+        if (_json_.count === undefined) { throw new Error() }
+        this.count = _json_.count
+    }
+
+    readonly id: number
+    /**
+     * id
+     */
+    readonly id2: number
+    /**
+     * 名称
+     */
+    readonly name: string
+    /**
+     * 描述
+     */
+    readonly desc: string
+    /**
+     * 个数
+     */
+    readonly count: number
+
+    resolve(tables:Tables) {
+        
+        
+        
+        
+        
+    }
+}
+
+}
+
+
+export namespace demo {
 export class reward {
 
     constructor(_json_: any) {
@@ -510,6 +556,37 @@ export class Tbitem {
 
 
 export namespace demo {
+export class TbmanyRow10000 {
+    private _dataMap: Map<number, demo.manyRow10000>
+    private _dataList: demo.manyRow10000[]
+    constructor(_json_: any) {
+        this._dataMap = new Map<number, demo.manyRow10000>()
+        this._dataList = []
+        for(var _json2_ of _json_) {
+            let _v: demo.manyRow10000
+            _v = new demo.manyRow10000(_json2_)
+            this._dataList.push(_v)
+            this._dataMap.set(_v.id, _v)
+        }
+    }
+
+    getDataMap(): Map<number, demo.manyRow10000> { return this._dataMap; }
+    getDataList(): demo.manyRow10000[] { return this._dataList; }
+
+    get(key: number): demo.manyRow10000 | undefined { return this._dataMap.get(key); }
+
+    resolve(tables:Tables) {
+        for(let  data of this._dataList)
+        {
+            data.resolve(tables)
+        }
+    }
+
+}
+}
+
+
+export namespace demo {
 export class Tbreward {
     private _dataMap: Map<number, demo.reward>
     private _dataList: demo.reward[]
@@ -548,16 +625,20 @@ export class Tables {
     get Tbconstant(): demo.Tbconstant  { return this._Tbconstant;}
     private _Tbitem: demo.Tbitem
     get Tbitem(): demo.Tbitem  { return this._Tbitem;}
+    private _TbmanyRow10000: demo.TbmanyRow10000
+    get TbmanyRow10000(): demo.TbmanyRow10000  { return this._TbmanyRow10000;}
     private _Tbreward: demo.Tbreward
     get Tbreward(): demo.Tbreward  { return this._Tbreward;}
 
     constructor(loader: JsonLoader) {
         this._Tbconstant = new demo.Tbconstant(loader('demo_tbconstant'))
         this._Tbitem = new demo.Tbitem(loader('demo_tbitem'))
+        this._TbmanyRow10000 = new demo.TbmanyRow10000(loader('demo_tbmanyrow10000'))
         this._Tbreward = new demo.Tbreward(loader('demo_tbreward'))
 
         this._Tbconstant.resolve(this)
         this._Tbitem.resolve(this)
+        this._TbmanyRow10000.resolve(this)
         this._Tbreward.resolve(this)
     }
 }
