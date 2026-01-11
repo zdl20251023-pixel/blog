@@ -241,6 +241,32 @@ export class item {
 
 
 export namespace demo {
+export class lang {
+
+    constructor(_json_: any) {
+        if (_json_.key === undefined) { throw new Error() }
+        this.key = _json_.key
+        if (_json_.zh === undefined) { throw new Error() }
+        this.zh = _json_.zh
+        if (_json_.en === undefined) { throw new Error() }
+        this.en = _json_.en
+    }
+
+    readonly key: string
+    readonly zh: string
+    readonly en: string
+
+    resolve(tables:Tables) {
+        
+        
+        
+    }
+}
+
+}
+
+
+export namespace demo {
 export class Manykey {
 
     constructor(_json_: any) {
@@ -742,7 +768,7 @@ export class TbManyKey {
 
 export namespace demo {
 /**
- * 行的结构单例
+ * 行的结构单例（全局常量数据用）
  */
 export class TbOne {
 
@@ -789,6 +815,9 @@ export class TbOne {
 
 
 export namespace demo {
+/**
+ * 竖的单例结构（全局常量数据用）
+ */
 export class TbConstantOne {
 
     private _data: demo.ConstantOne
@@ -887,6 +916,37 @@ export class Tbitem {
 
 
 export namespace demo {
+export class Tblang {
+    private _dataMap: Map<string, demo.lang>
+    private _dataList: demo.lang[]
+    constructor(_json_: any) {
+        this._dataMap = new Map<string, demo.lang>()
+        this._dataList = []
+        for(var _json2_ of _json_) {
+            let _v: demo.lang
+            _v = new demo.lang(_json2_)
+            this._dataList.push(_v)
+            this._dataMap.set(_v.key, _v)
+        }
+    }
+
+    getDataMap(): Map<string, demo.lang> { return this._dataMap; }
+    getDataList(): demo.lang[] { return this._dataList; }
+
+    get(key: string): demo.lang | undefined { return this._dataMap.get(key); }
+
+    resolve(tables:Tables) {
+        for(let  data of this._dataList)
+        {
+            data.resolve(tables)
+        }
+    }
+
+}
+}
+
+
+export namespace demo {
 export class TbmanyRow10000 {
     private _dataMap: Map<number, demo.manyRow10000>
     private _dataList: demo.manyRow10000[]
@@ -959,15 +1019,20 @@ export class Tables {
     get TbManyKey(): demo.TbManyKey  { return this._TbManyKey;}
     private _TbOne: demo.TbOne
     /**
-     * 行的结构单例
+     * 行的结构单例（全局常量数据用）
      */
     get TbOne(): demo.TbOne  { return this._TbOne;}
     private _TbConstantOne: demo.TbConstantOne
+    /**
+     * 竖的单例结构（全局常量数据用）
+     */
     get TbConstantOne(): demo.TbConstantOne  { return this._TbConstantOne;}
     private _Tbconstant: demo.Tbconstant
     get Tbconstant(): demo.Tbconstant  { return this._Tbconstant;}
     private _Tbitem: demo.Tbitem
     get Tbitem(): demo.Tbitem  { return this._Tbitem;}
+    private _Tblang: demo.Tblang
+    get Tblang(): demo.Tblang  { return this._Tblang;}
     private _TbmanyRow10000: demo.TbmanyRow10000
     get TbmanyRow10000(): demo.TbmanyRow10000  { return this._TbmanyRow10000;}
     private _Tbreward: demo.Tbreward
@@ -979,6 +1044,7 @@ export class Tables {
         this._TbConstantOne = new demo.TbConstantOne(loader('demo_tbconstantone'))
         this._Tbconstant = new demo.Tbconstant(loader('demo_tbconstant'))
         this._Tbitem = new demo.Tbitem(loader('demo_tbitem'))
+        this._Tblang = new demo.Tblang(loader('demo_tblang'))
         this._TbmanyRow10000 = new demo.TbmanyRow10000(loader('demo_tbmanyrow10000'))
         this._Tbreward = new demo.Tbreward(loader('demo_tbreward'))
 
@@ -987,6 +1053,7 @@ export class Tables {
         this._TbConstantOne.resolve(this)
         this._Tbconstant.resolve(this)
         this._Tbitem.resolve(this)
+        this._Tblang.resolve(this)
         this._TbmanyRow10000.resolve(this)
         this._Tbreward.resolve(this)
     }
