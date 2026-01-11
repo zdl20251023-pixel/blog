@@ -1,13 +1,13 @@
 // 应用入口文件
 import swagger from "@elysiajs/swagger";
 import { Elysia } from "elysia";
+import { Circle, Rect } from "../config_table_code/schema";
 import { configTables } from "./lib/config-tables"; // 配置表实例
 import { db } from "./lib/db";
 import { articleController } from "./modules/article/controller"; // 文章控制器
 import { commentController } from "./modules/comment/controller"; // 评论控制器
 import { demoController } from "./modules/demo/controller"; // 演示控制器
 import { userController } from "./modules/user/controller"; // 用户控制器
-import { Circle, Rect } from "./output_code/schema";
 
 const app = new Elysia()
   .use(swagger({
