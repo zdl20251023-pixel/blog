@@ -494,6 +494,8 @@ export class reward {
         this.m1 = new Map<number, string>(); for(var _entry0_ of _json_.m1) { let _k0; _k0 = _entry0_[0];  let _v0;  _v0 = _entry0_[1]; this.m1.set(_k0, _v0);  }
         if (_json_.m2 === undefined) { throw new Error() }
         this.m2 = new Map<number, number>(); for(var _entry0_ of _json_.m2) { let _k0; _k0 = _entry0_[0];  let _v0;  _v0 = _entry0_[1]; this.m2.set(_k0, _v0);  }
+        if (_json_.m3 === undefined) { throw new Error() }
+        this.m3 = _json_.m3
     }
 
     /**
@@ -536,6 +538,7 @@ export class reward {
     readonly items: test.Item[]
     readonly m1: Map<number, string>
     readonly m2: Map<number, number>
+    readonly m3: Set<number>
 
     resolve(tables:Tables) {
         
@@ -551,6 +554,7 @@ export class reward {
         
         
         for (let _e of this.items) { _e?.resolve(tables); }
+        
         
         
     }
@@ -620,6 +624,80 @@ export class Rect extends Shape {
 
     resolve(tables:Tables) {
         super.resolve(tables)
+        
+        
+    }
+}
+
+
+
+
+
+export class Test {
+
+    constructor(_json_: any) {
+        if (_json_.id === undefined) { throw new Error() }
+        this.id = _json_.id
+        if (_json_.name === undefined) { throw new Error() }
+        this.name = _json_.name
+        if (_json_.desc === undefined) { throw new Error() }
+        this.desc = _json_.desc
+        if (_json_.count === undefined) { throw new Error() }
+        this.count = _json_.count
+        if (_json_.x1 === undefined) { throw new Error() }
+        { this.x1 = []; for(let _ele0 of _json_.x1) { let _e0; _e0 = _ele0; this.x1.push(_e0);}}
+        if (_json_.x2 === undefined) { throw new Error() }
+        { this.x2 = []; for(let _ele0 of _json_.x2) { let _e0; _e0 = _ele0; this.x2.push(_e0);}}
+        if (_json_.x3 === undefined) { throw new Error() }
+        { this.x3 = []; for(let _ele0 of _json_.x3) { let _e0; _e0 = new test.Item(_ele0); this.x3.push(_e0);}}
+        if (_json_.s1 === undefined) { throw new Error() }
+        this.s1 = Shape.constructorFrom(_json_.s1)
+        if (_json_.x4 === undefined) { throw new Error() }
+        this.x4 = new vector2(_json_.x4)
+        if (_json_.desc2 === undefined) { throw new Error() }
+        this.desc2 = _json_.desc2
+        if (_json_.x5 === undefined) { throw new Error() }
+        this.x5 = _json_.x5
+        if (_json_.x6 === undefined) { throw new Error() }
+        this.x6 = _json_.x6
+    }
+
+    /**
+     * id
+     */
+    readonly id: number
+    /**
+     * 名称
+     */
+    readonly name: string
+    /**
+     * 描述
+     */
+    readonly desc: string
+    /**
+     * 个数
+     */
+    readonly count: number
+    readonly x1: number[]
+    readonly x2: number[]
+    readonly x3: test.Item[]
+    readonly s1: Shape
+    readonly x4: vector2
+    readonly desc2: string
+    readonly x5: number
+    readonly x6: boolean
+
+    resolve(tables:Tables) {
+        
+        
+        
+        
+        
+        
+        for (let _e of this.x3) { _e?.resolve(tables); }
+        this.s1?.resolve(tables);
+        
+        
         
         
     }
@@ -853,6 +931,37 @@ export class TbConstantOne {
 }
 
 
+
+export class TbTest {
+    private _dataMap: Map<number, Test>
+    private _dataList: Test[]
+    constructor(_json_: any) {
+        this._dataMap = new Map<number, Test>()
+        this._dataList = []
+        for(var _json2_ of _json_) {
+            let _v: Test
+            _v = new Test(_json2_)
+            this._dataList.push(_v)
+            this._dataMap.set(_v.id, _v)
+        }
+    }
+
+    getDataMap(): Map<number, Test> { return this._dataMap; }
+    getDataList(): Test[] { return this._dataList; }
+
+    get(key: number): Test | undefined { return this._dataMap.get(key); }
+
+    resolve(tables:Tables) {
+        for(let  data of this._dataList)
+        {
+            data.resolve(tables)
+        }
+    }
+
+}
+
+
+
 export namespace demo {
 export class Tbconstant {
     private _dataMap: Map<number, demo.constant>
@@ -1027,6 +1136,8 @@ export class Tables {
      * 竖的单例结构（全局常量数据用）
      */
     get TbConstantOne(): demo.TbConstantOne  { return this._TbConstantOne;}
+    private _TbTest: TbTest
+    get TbTest(): TbTest  { return this._TbTest;}
     private _Tbconstant: demo.Tbconstant
     get Tbconstant(): demo.Tbconstant  { return this._Tbconstant;}
     private _Tbitem: demo.Tbitem
@@ -1042,6 +1153,7 @@ export class Tables {
         this._TbManyKey = new demo.TbManyKey(loader('demo_tbmanykey'))
         this._TbOne = new demo.TbOne(loader('demo_tbone'))
         this._TbConstantOne = new demo.TbConstantOne(loader('demo_tbconstantone'))
+        this._TbTest = new TbTest(loader('tbtest'))
         this._Tbconstant = new demo.Tbconstant(loader('demo_tbconstant'))
         this._Tbitem = new demo.Tbitem(loader('demo_tbitem'))
         this._Tblang = new demo.Tblang(loader('demo_tblang'))
@@ -1051,6 +1163,7 @@ export class Tables {
         this._TbManyKey.resolve(this)
         this._TbOne.resolve(this)
         this._TbConstantOne.resolve(this)
+        this._TbTest.resolve(this)
         this._Tbconstant.resolve(this)
         this._Tbitem.resolve(this)
         this._Tblang.resolve(this)
