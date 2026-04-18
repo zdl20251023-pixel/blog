@@ -1,0 +1,1818 @@
+{
+  "fetchedAt": "2026-04-13T09:05:13.307Z",
+  "toolCount": 3,
+  "tools": [
+    {
+      "name": "create_game_from_game_hand",
+      "description": "Create and store a GameHand in session state from a structured JSON object.\n\nUse this when the user provides a complete GameHand JSON directly — positions, hole cards,\nactions, and board — rather than pasting a hand history string.\nStores the hand and returns a store_id for downstream analysis tools.\n\nUseful when:\n- The user has a GameHand JSON object ready to analyse\n- The hand was constructed programmatically or exported from another source\n- You need to normalise amounts expressed in big blind multiples to chips before analysis\n\nAction order rules (critical for verbal hand construction):\n- Preflop (2-blind): UTG, HJ, CO, BTN, SB, BB\n- Preflop (3-blind/straddle): UTG, ..., BTN, SB, BB, STR (straddle acts last)\n- Postflop (all formats): SB, BB, STR, UTG, ..., BTN (left of dealer acts first)\n- Skip folded players. Order is by seat position relative to dealer, not the\n  order the user mentioned them verbally.\n\nPrerequisites:\n- Call `get_game_hand_schema` first to understand the required fields and validation rules\n  if the user is building the GameHand from scratch.\n\nReturns:\n    SessionContext with store_id for use with solver, equity, decision_analysis, and all other analysis tools.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "game_hand": {
+            "description": "Complete representation of a poker hand.\n\nModel that captures all details of a single poker hand including players, actions, blinds, and game configuration.\n\nThis is the primary data structure for analyzing and replaying poker hands.\n",
+            "properties": {
+              "gameuuid": {
+                "description": "Unique hand identifier.",
+                "type": "string"
+              },
+              "game_mode_code": {
+                "description": "Game mode (NORMAL, BOMB, ZOOM, SPLASH).",
+                "enum": [
+                  "normal",
+                  "bomb",
+                  "bombpot",
+                  "zoom",
+                  "splash",
+                  "squid",
+                  "mtt",
+                  "shortdeck",
+                  "spin",
+                  "splash-5",
+                  "splash-10",
+                  "splash-20",
+                  "2b-0.0",
+                  "2b-0.5",
+                  "2b-1.0",
+                  "2b-2.0",
+                  "2b-2.5",
+                  "3b-0.0",
+                  "3b-0.5",
+                  "3b-1.0",
+                  "3b-2.0",
+                  "3b-2.5"
+                ],
+                "type": "string"
+              },
+              "players": {
+                "description": "All players in the hand (2-10).",
+                "items": {
+                  "description": "A single player in a poker hand.",
+                  "properties": {
+                    "seat_no": {
+                      "description": "Zero-indexed seat number.",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "stack": {
+                      "description": "Starting chip stack in smallest currency unit.",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "uid": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Unique player identifier."
+                    },
+                    "hole_cards": {
+                      "anyOf": [
+                        {
+                          "description": "Player's private hole cards (2-6 cards).\n\nSupports variable-length hole cards for different poker variants:\n- 2 cards: No-Limit Hold'em (NLH)\n- 4 cards: Pot-Limit Omaha 4 (PLO4)\n- 5 cards: Pot-Limit Omaha 5 (PLO5)\n- 6 cards: Pot-Limit Omaha 6 (PLO6)\n\nCards are immutable and preserve their input order (no automatic sorting).\n\nInput Formats:\n    - String: 'AhKs' (recommended)\n    - List: ['Ah', 'Ks']\n    - Dict: {'cards': ['Ah', 'Ks']}\n    - None/empty: Unknown cards",
+                          "properties": {
+                            "cards": {
+                              "description": "Tuple of 2-6 hole cards dealt to a player.",
+                              "items": {
+                                "description": "Represents a single playing card in a poker deck.",
+                                "properties": {
+                                  "rank": {
+                                    "description": "Card rank (2-A)",
+                                    "enum": [
+                                      "2",
+                                      "3",
+                                      "4",
+                                      "5",
+                                      "6",
+                                      "7",
+                                      "8",
+                                      "9",
+                                      "T",
+                                      "J",
+                                      "Q",
+                                      "K",
+                                      "A"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "suit": {
+                                    "description": "Card suit (c/d/h/s)",
+                                    "enum": [
+                                      "d",
+                                      "c",
+                                      "h",
+                                      "s"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "rank",
+                                  "suit"
+                                ],
+                                "type": "object"
+                              },
+                              "maxItems": 6,
+                              "type": "array"
+                            }
+                          },
+                          "required": [
+                            "cards"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Private hole cards (None if hidden)."
+                    },
+                    "position": {
+                      "anyOf": [
+                        {
+                          "description": "Table positions in poker.\n\nSupports aliases like 'utg+1' -> UTG1, 'mp+1' -> MP1.",
+                          "enum": [
+                            "BTN",
+                            "SB",
+                            "BB",
+                            "STR",
+                            "UTG",
+                            "UTG1",
+                            "UTG2",
+                            "LJ",
+                            "HJ",
+                            "CO",
+                            "MP",
+                            "MP1"
+                          ],
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Table position (BTN, SB, BB, etc.)."
+                    },
+                    "win_amount": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": 0,
+                      "description": "Net chips won/lost (positive = profit)."
+                    },
+                    "rake_amount": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": 0,
+                      "description": "Rake paid by this player."
+                    },
+                    "platform": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Poker platform identifier."
+                    },
+                    "bounty": {
+                      "anyOf": [
+                        {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Tournament bounty amount."
+                    },
+                    "rank": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": 0,
+                      "description": "Hand strength rank or tournament finishing position."
+                    },
+                    "expected_win_amount": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "EV of hand outcome."
+                    },
+                    "equity_win_amount": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Equity-based win amount."
+                    },
+                    "preflop_equity": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Preflop hand equity (0.0-1.0)."
+                    }
+                  },
+                  "required": [
+                    "seat_no",
+                    "stack"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 10,
+                "minItems": 2,
+                "type": "array"
+              },
+              "actions": {
+                "description": "Complete chronological action history.",
+                "properties": {
+                  "entries": {
+                    "description": "Chronological list of actions in the hand.",
+                    "items": {
+                      "description": "Single poker action in a hand history.",
+                      "properties": {
+                        "action": {
+                          "anyOf": [
+                            {
+                              "description": "Poker action types.\n\nStandard poker actions: FOLD, CHECK, BET, RAISE, ALLIN, CALL.\nEach action has a short code for compact representation.",
+                              "enum": [
+                                "fold",
+                                "check",
+                                "bet",
+                                "raise",
+                                "allin",
+                                "call"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "description": "Represents a single playing card in a poker deck.",
+                              "properties": {
+                                "rank": {
+                                  "description": "Card rank (2-A)",
+                                  "enum": [
+                                    "2",
+                                    "3",
+                                    "4",
+                                    "5",
+                                    "6",
+                                    "7",
+                                    "8",
+                                    "9",
+                                    "T",
+                                    "J",
+                                    "Q",
+                                    "K",
+                                    "A"
+                                  ],
+                                  "type": "string"
+                                },
+                                "suit": {
+                                  "description": "Card suit (c/d/h/s)",
+                                  "enum": [
+                                    "d",
+                                    "c",
+                                    "h",
+                                    "s"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "rank",
+                                "suit"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "maxItems": 3,
+                              "minItems": 3,
+                              "prefixItems": [
+                                {
+                                  "description": "Represents a single playing card in a poker deck.",
+                                  "properties": {
+                                    "rank": {
+                                      "description": "Card rank (2-A)",
+                                      "enum": [
+                                        "2",
+                                        "3",
+                                        "4",
+                                        "5",
+                                        "6",
+                                        "7",
+                                        "8",
+                                        "9",
+                                        "T",
+                                        "J",
+                                        "Q",
+                                        "K",
+                                        "A"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "suit": {
+                                      "description": "Card suit (c/d/h/s)",
+                                      "enum": [
+                                        "d",
+                                        "c",
+                                        "h",
+                                        "s"
+                                      ],
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "rank",
+                                    "suit"
+                                  ],
+                                  "type": "object"
+                                },
+                                {
+                                  "description": "Represents a single playing card in a poker deck.",
+                                  "properties": {
+                                    "rank": {
+                                      "description": "Card rank (2-A)",
+                                      "enum": [
+                                        "2",
+                                        "3",
+                                        "4",
+                                        "5",
+                                        "6",
+                                        "7",
+                                        "8",
+                                        "9",
+                                        "T",
+                                        "J",
+                                        "Q",
+                                        "K",
+                                        "A"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "suit": {
+                                      "description": "Card suit (c/d/h/s)",
+                                      "enum": [
+                                        "d",
+                                        "c",
+                                        "h",
+                                        "s"
+                                      ],
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "rank",
+                                    "suit"
+                                  ],
+                                  "type": "object"
+                                },
+                                {
+                                  "description": "Represents a single playing card in a poker deck.",
+                                  "properties": {
+                                    "rank": {
+                                      "description": "Card rank (2-A)",
+                                      "enum": [
+                                        "2",
+                                        "3",
+                                        "4",
+                                        "5",
+                                        "6",
+                                        "7",
+                                        "8",
+                                        "9",
+                                        "T",
+                                        "J",
+                                        "Q",
+                                        "K",
+                                        "A"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "suit": {
+                                      "description": "Card suit (c/d/h/s)",
+                                      "enum": [
+                                        "d",
+                                        "c",
+                                        "h",
+                                        "s"
+                                      ],
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "rank",
+                                    "suit"
+                                  ],
+                                  "type": "object"
+                                }
+                              ],
+                              "type": "array"
+                            },
+                            {
+                              "description": "Placeholder tokens for unknown board cards.",
+                              "enum": [
+                                "?",
+                                "???"
+                              ],
+                              "type": "string"
+                            }
+                          ],
+                          "description": "The action type: ActionLabel for player actions, Card for turn/river, tuple for flop, CardPlaceholder for unknown cards."
+                        },
+                        "amount": {
+                          "anyOf": [
+                            {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ],
+                              "ge": 0
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null,
+                          "description": "Bet/raise amount in chips (None for non-money actions)."
+                        },
+                        "pot_size": {
+                          "anyOf": [
+                            {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null,
+                          "description": "Pot-relative sizing as a fraction (e.g. 0.5 = half pot)."
+                        },
+                        "player_position": {
+                          "anyOf": [
+                            {
+                              "description": "Table positions in poker.\n\nSupports aliases like 'utg+1' -> UTG1, 'mp+1' -> MP1.",
+                              "enum": [
+                                "BTN",
+                                "SB",
+                                "BB",
+                                "STR",
+                                "UTG",
+                                "UTG1",
+                                "UTG2",
+                                "LJ",
+                                "HJ",
+                                "CO",
+                                "MP",
+                                "MP1"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null,
+                          "description": "Table position of the acting player."
+                        },
+                        "seat_no": {
+                          "anyOf": [
+                            {
+                              "minimum": 0,
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null,
+                          "description": "Seat number of the acting player."
+                        },
+                        "action_time": {
+                          "anyOf": [
+                            {
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null,
+                          "description": "Decision time in milliseconds (negative = auto-action)."
+                        }
+                      },
+                      "required": [
+                        "action"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "pot_sizings": {
+                    "default": false,
+                    "description": "Whether amounts use pot-relative encoding.",
+                    "type": "boolean"
+                  },
+                  "big_blind_size": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "description": "Big blind size for BB-relative scaling (0 for ante-only games)."
+                  },
+                  "big_blind_sizings": {
+                    "default": false,
+                    "description": "Whether amounts use big-blind-relative encoding.",
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              },
+              "big_blind": {
+                "description": "Big blind amount in smallest currency unit (0 for ante-only games).",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "ante": {
+                "description": "Ante per player in smallest currency unit.",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "dealer_seat": {
+                "description": "Button (dealer) seat number.",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "sb_seat": {
+                "description": "Small blind seat number.",
+                "type": "integer"
+              },
+              "bb_seat": {
+                "description": "Big blind seat number (-1 if not set).",
+                "type": "integer"
+              },
+              "game_type": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Human-readable game type (e.g. \"NLHE 6-max\")."
+              },
+              "game_type_code": {
+                "anyOf": [
+                  {
+                    "description": "Poker game variant types.",
+                    "enum": [
+                      "plo4",
+                      "plo5",
+                      "nlhe",
+                      "shortdeck",
+                      "unknown"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Standardized variant (NLHE, PLO4, PLO5, SHORTDECK)."
+              },
+              "game_group": {
+                "anyOf": [
+                  {
+                    "description": "Poker game format categories.",
+                    "enum": [
+                      "cash",
+                      "mtt",
+                      "spin",
+                      "private",
+                      "unknown"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Format category (CASH, MTT, PRIVATE)."
+              },
+              "date": {
+                "anyOf": [
+                  {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Hand timestamp (UTC)."
+              },
+              "roomid": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Poker room identifier."
+              },
+              "roomuuid": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Poker room UUID."
+              },
+              "straddle_seat": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Straddle seat (-1 or None = no straddle)."
+              },
+              "flop_pot": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Pot size at flop."
+              },
+              "turn_pot": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Pot size at turn."
+              },
+              "river_pot": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Pot size at river."
+              },
+              "final_pot": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Total pot at hand end."
+              },
+              "post_seats": {
+                "description": "Seats that posted out-of-turn blinds.",
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "currency": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "ISO 4217 currency code (USD, EUR, etc.)."
+              },
+              "small_blind": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Small blind amount (auto big_blind // 2 if None)."
+              },
+              "tournament_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Tournament identifier (None for cash games)."
+              },
+              "live_ante": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Button-posted full ante (short deck games)."
+              }
+            },
+            "required": [
+              "gameuuid",
+              "game_mode_code",
+              "players",
+              "actions",
+              "big_blind",
+              "ante",
+              "dealer_seat",
+              "sb_seat",
+              "bb_seat"
+            ],
+            "type": "object"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional Unique identifier of the user.",
+            "examples": [
+              "player-55df7034-5f07-4409-ab91-da68769f9d53"
+            ]
+          },
+          "amounts_in_bb": {
+            "default": false,
+            "description": "When True, all monetary amounts (stacks, bet/raise sizes, ante, pot sizes) are treated as big blind multiples rather than chip values. The `big_blind` field must be set to the actual chip value (e.g., 200 for a $1/$2 game). Amounts are automatically converted to chips before storing. `small_blind` is auto-computed from `big_blind` — no need to provide it.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "game_hand"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "store_id": {
+            "description": "Required hand storage key returned by `create_game_from_game_hand`.",
+            "type": "string"
+          },
+          "strategy_mode": {
+            "default": "pre_action",
+            "description": "Whether coaching is anchored before hero acts at the current node (`pre_action`) or after hero has acted (`post_action`, e.g. \"was I right?\"). Downstream tools may use this to choose the correct game-state snapshot.",
+            "enum": [
+              "pre_action",
+              "post_action"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "store_id"
+        ],
+        "additionalProperties": false,
+        "description": "Shared context for tools that operate on a previously stored game hand.",
+        "example": {
+          "store_id": "hand-abc123:player-55df7034",
+          "strategy_mode": "pre_action"
+        }
+      }
+    },
+    {
+      "name": "create_game_from_poker_stars",
+      "description": "Create and store a GameHand from a pasted PokerStars hand history string.\n\nUse this when the user pastes a full hand history copied from the PokerStars client.\nParses the text into a canonical GameHand and stores it in session state.\nReturns a store_id for use with all analysis and visual tools.\n\nWhen the hand has exactly one player with known hole cards (``Dealt to``), the stored\nhand is truncated to that hero's latest decision point and includes their action at\nthat node (full history otherwise).\n\nUseful when:\n- The user copies and pastes a hand directly from the PokerStars client (regular or Zoom format)\n- A multi-hand export is pasted — a single hand is extracted automatically\n\nAfter this tool returns, run the analysis flow using the store_id:\n1. lock_node — infer the decision street from the user's question, or use the last street in the hand\n2. decision_analysis_tool — run full GTO analysis with the user's question as the query\n3. Build an interactive board visualization and present coaching with follow-up buttons\n\nPrerequisites:\n- Call `get_poker_stars_format_schema` if a parse error occurs to diagnose missing or malformed sections.\n\nReturns:\n    SessionContext with store_id for use with all analysis and visual tools.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "hand_history_text": {
+            "description": "Raw PokerStars hand history text for a single hand (regular or Zoom). Must contain a \"PokerStars Hand #\" or \"PokerStars Zoom Hand #\" header, a HOLE CARDS section, and a SUMMARY section. An optional \"***** # N *****\" prefix line (multi-hand exports) is also accepted. Use get_poker_stars_format_schema for the full format specification.",
+            "examples": [
+              "PokerStars Hand #256558347133:  Hold'em No Limit ($0.01/$0.02 CAD) - 2025/06/13 23:20:09 ET\nTable 'Desdemona' 6-max Seat #3 is the button\nSeat 3: player3 ($2.17 in chips)\nSeat 4: player4 ($1.50 in chips)\nSeat 5: player5 ($1.98 in chips)\nplayer4: posts small blind $0.01\nplayer5: posts big blind $0.02\n*** HOLE CARDS ***\nDealt to player5 [Ks Kc]\nplayer3: folds\nplayer4: calls $0.01\nplayer5: checks\n*** FLOP *** [Jh 6h 4c]\nplayer4: checks\nplayer5: raises $0.04 to $0.06\nplayer4: folds\n*** SUMMARY ***\nTotal pot $0.09 | Rake $0.01\nSeat 5: player5 (big blind) collected ($0.08)"
+            ],
+            "type": "string"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional Unique identifier of the user.",
+            "examples": [
+              "player-55df7034-5f07-4409-ab91-da68769f9d53"
+            ]
+          },
+          "gameuuid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional hand UUID override. When provided, used as the hand id instead of the one extracted from the hand history text. Useful for deduplication or linking to an external record. If None, the id is extracted directly from the PokerStars hand number."
+          }
+        },
+        "required": [
+          "hand_history_text"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "store_id": {
+            "description": "Required hand storage key returned by `create_game_from_game_hand`.",
+            "type": "string"
+          },
+          "strategy_mode": {
+            "default": "pre_action",
+            "description": "Whether coaching is anchored before hero acts at the current node (`pre_action`) or after hero has acted (`post_action`, e.g. \"was I right?\"). Downstream tools may use this to choose the correct game-state snapshot.",
+            "enum": [
+              "pre_action",
+              "post_action"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "store_id"
+        ],
+        "additionalProperties": false,
+        "description": "Shared context for tools that operate on a previously stored game hand.",
+        "example": {
+          "store_id": "hand-abc123:player-55df7034",
+          "strategy_mode": "pre_action"
+        }
+      }
+    },
+    {
+      "name": "validate_game_hand",
+      "description": "Dry-run validate a GameHand JSON without storing it.\n\nRun this BEFORE `create_game_from_game_hand` when building a hand from scratch\nor from a verbal description. Returns all structural errors at once so they can\nbe fixed before the hand enters the analysis pipeline.\n\nChecks performed:\n- FSM replay (action sequence must be legal game state transitions)\n- Hero detection (at least one player must have hole_cards)\n- Duplicate card detection (no card in both hole cards and board)\n- Preflop action order (first actor must match expected position)\n- Postflop action order (left of dealer acts first)\n\nReturns:\n    Validation result with pass/fail status, errors, and warnings.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "game_hand": {
+            "description": "Complete representation of a poker hand.\n\nModel that captures all details of a single poker hand including players, actions, blinds, and game configuration.\n\nThis is the primary data structure for analyzing and replaying poker hands.\n",
+            "properties": {
+              "gameuuid": {
+                "description": "Unique hand identifier.",
+                "type": "string"
+              },
+              "game_mode_code": {
+                "description": "Game mode (NORMAL, BOMB, ZOOM, SPLASH).",
+                "enum": [
+                  "normal",
+                  "bomb",
+                  "bombpot",
+                  "zoom",
+                  "splash",
+                  "squid",
+                  "mtt",
+                  "shortdeck",
+                  "spin",
+                  "splash-5",
+                  "splash-10",
+                  "splash-20",
+                  "2b-0.0",
+                  "2b-0.5",
+                  "2b-1.0",
+                  "2b-2.0",
+                  "2b-2.5",
+                  "3b-0.0",
+                  "3b-0.5",
+                  "3b-1.0",
+                  "3b-2.0",
+                  "3b-2.5"
+                ],
+                "type": "string"
+              },
+              "players": {
+                "description": "All players in the hand (2-10).",
+                "items": {
+                  "description": "A single player in a poker hand.",
+                  "properties": {
+                    "seat_no": {
+                      "description": "Zero-indexed seat number.",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "stack": {
+                      "description": "Starting chip stack in smallest currency unit.",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "uid": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Unique player identifier."
+                    },
+                    "hole_cards": {
+                      "anyOf": [
+                        {
+                          "description": "Player's private hole cards (2-6 cards).\n\nSupports variable-length hole cards for different poker variants:\n- 2 cards: No-Limit Hold'em (NLH)\n- 4 cards: Pot-Limit Omaha 4 (PLO4)\n- 5 cards: Pot-Limit Omaha 5 (PLO5)\n- 6 cards: Pot-Limit Omaha 6 (PLO6)\n\nCards are immutable and preserve their input order (no automatic sorting).\n\nInput Formats:\n    - String: 'AhKs' (recommended)\n    - List: ['Ah', 'Ks']\n    - Dict: {'cards': ['Ah', 'Ks']}\n    - None/empty: Unknown cards",
+                          "properties": {
+                            "cards": {
+                              "description": "Tuple of 2-6 hole cards dealt to a player.",
+                              "items": {
+                                "description": "Represents a single playing card in a poker deck.",
+                                "properties": {
+                                  "rank": {
+                                    "description": "Card rank (2-A)",
+                                    "enum": [
+                                      "2",
+                                      "3",
+                                      "4",
+                                      "5",
+                                      "6",
+                                      "7",
+                                      "8",
+                                      "9",
+                                      "T",
+                                      "J",
+                                      "Q",
+                                      "K",
+                                      "A"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "suit": {
+                                    "description": "Card suit (c/d/h/s)",
+                                    "enum": [
+                                      "d",
+                                      "c",
+                                      "h",
+                                      "s"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "rank",
+                                  "suit"
+                                ],
+                                "type": "object"
+                              },
+                              "maxItems": 6,
+                              "type": "array"
+                            }
+                          },
+                          "required": [
+                            "cards"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Private hole cards (None if hidden)."
+                    },
+                    "position": {
+                      "anyOf": [
+                        {
+                          "description": "Table positions in poker.\n\nSupports aliases like 'utg+1' -> UTG1, 'mp+1' -> MP1.",
+                          "enum": [
+                            "BTN",
+                            "SB",
+                            "BB",
+                            "STR",
+                            "UTG",
+                            "UTG1",
+                            "UTG2",
+                            "LJ",
+                            "HJ",
+                            "CO",
+                            "MP",
+                            "MP1"
+                          ],
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Table position (BTN, SB, BB, etc.)."
+                    },
+                    "win_amount": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": 0,
+                      "description": "Net chips won/lost (positive = profit)."
+                    },
+                    "rake_amount": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": 0,
+                      "description": "Rake paid by this player."
+                    },
+                    "platform": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Poker platform identifier."
+                    },
+                    "bounty": {
+                      "anyOf": [
+                        {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Tournament bounty amount."
+                    },
+                    "rank": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": 0,
+                      "description": "Hand strength rank or tournament finishing position."
+                    },
+                    "expected_win_amount": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "EV of hand outcome."
+                    },
+                    "equity_win_amount": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Equity-based win amount."
+                    },
+                    "preflop_equity": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Preflop hand equity (0.0-1.0)."
+                    }
+                  },
+                  "required": [
+                    "seat_no",
+                    "stack"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 10,
+                "minItems": 2,
+                "type": "array"
+              },
+              "actions": {
+                "description": "Complete chronological action history.",
+                "properties": {
+                  "entries": {
+                    "description": "Chronological list of actions in the hand.",
+                    "items": {
+                      "description": "Single poker action in a hand history.",
+                      "properties": {
+                        "action": {
+                          "anyOf": [
+                            {
+                              "description": "Poker action types.\n\nStandard poker actions: FOLD, CHECK, BET, RAISE, ALLIN, CALL.\nEach action has a short code for compact representation.",
+                              "enum": [
+                                "fold",
+                                "check",
+                                "bet",
+                                "raise",
+                                "allin",
+                                "call"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "description": "Represents a single playing card in a poker deck.",
+                              "properties": {
+                                "rank": {
+                                  "description": "Card rank (2-A)",
+                                  "enum": [
+                                    "2",
+                                    "3",
+                                    "4",
+                                    "5",
+                                    "6",
+                                    "7",
+                                    "8",
+                                    "9",
+                                    "T",
+                                    "J",
+                                    "Q",
+                                    "K",
+                                    "A"
+                                  ],
+                                  "type": "string"
+                                },
+                                "suit": {
+                                  "description": "Card suit (c/d/h/s)",
+                                  "enum": [
+                                    "d",
+                                    "c",
+                                    "h",
+                                    "s"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "rank",
+                                "suit"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "maxItems": 3,
+                              "minItems": 3,
+                              "prefixItems": [
+                                {
+                                  "description": "Represents a single playing card in a poker deck.",
+                                  "properties": {
+                                    "rank": {
+                                      "description": "Card rank (2-A)",
+                                      "enum": [
+                                        "2",
+                                        "3",
+                                        "4",
+                                        "5",
+                                        "6",
+                                        "7",
+                                        "8",
+                                        "9",
+                                        "T",
+                                        "J",
+                                        "Q",
+                                        "K",
+                                        "A"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "suit": {
+                                      "description": "Card suit (c/d/h/s)",
+                                      "enum": [
+                                        "d",
+                                        "c",
+                                        "h",
+                                        "s"
+                                      ],
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "rank",
+                                    "suit"
+                                  ],
+                                  "type": "object"
+                                },
+                                {
+                                  "description": "Represents a single playing card in a poker deck.",
+                                  "properties": {
+                                    "rank": {
+                                      "description": "Card rank (2-A)",
+                                      "enum": [
+                                        "2",
+                                        "3",
+                                        "4",
+                                        "5",
+                                        "6",
+                                        "7",
+                                        "8",
+                                        "9",
+                                        "T",
+                                        "J",
+                                        "Q",
+                                        "K",
+                                        "A"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "suit": {
+                                      "description": "Card suit (c/d/h/s)",
+                                      "enum": [
+                                        "d",
+                                        "c",
+                                        "h",
+                                        "s"
+                                      ],
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "rank",
+                                    "suit"
+                                  ],
+                                  "type": "object"
+                                },
+                                {
+                                  "description": "Represents a single playing card in a poker deck.",
+                                  "properties": {
+                                    "rank": {
+                                      "description": "Card rank (2-A)",
+                                      "enum": [
+                                        "2",
+                                        "3",
+                                        "4",
+                                        "5",
+                                        "6",
+                                        "7",
+                                        "8",
+                                        "9",
+                                        "T",
+                                        "J",
+                                        "Q",
+                                        "K",
+                                        "A"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "suit": {
+                                      "description": "Card suit (c/d/h/s)",
+                                      "enum": [
+                                        "d",
+                                        "c",
+                                        "h",
+                                        "s"
+                                      ],
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "rank",
+                                    "suit"
+                                  ],
+                                  "type": "object"
+                                }
+                              ],
+                              "type": "array"
+                            },
+                            {
+                              "description": "Placeholder tokens for unknown board cards.",
+                              "enum": [
+                                "?",
+                                "???"
+                              ],
+                              "type": "string"
+                            }
+                          ],
+                          "description": "The action type: ActionLabel for player actions, Card for turn/river, tuple for flop, CardPlaceholder for unknown cards."
+                        },
+                        "amount": {
+                          "anyOf": [
+                            {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ],
+                              "ge": 0
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null,
+                          "description": "Bet/raise amount in chips (None for non-money actions)."
+                        },
+                        "pot_size": {
+                          "anyOf": [
+                            {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null,
+                          "description": "Pot-relative sizing as a fraction (e.g. 0.5 = half pot)."
+                        },
+                        "player_position": {
+                          "anyOf": [
+                            {
+                              "description": "Table positions in poker.\n\nSupports aliases like 'utg+1' -> UTG1, 'mp+1' -> MP1.",
+                              "enum": [
+                                "BTN",
+                                "SB",
+                                "BB",
+                                "STR",
+                                "UTG",
+                                "UTG1",
+                                "UTG2",
+                                "LJ",
+                                "HJ",
+                                "CO",
+                                "MP",
+                                "MP1"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null,
+                          "description": "Table position of the acting player."
+                        },
+                        "seat_no": {
+                          "anyOf": [
+                            {
+                              "minimum": 0,
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null,
+                          "description": "Seat number of the acting player."
+                        },
+                        "action_time": {
+                          "anyOf": [
+                            {
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null,
+                          "description": "Decision time in milliseconds (negative = auto-action)."
+                        }
+                      },
+                      "required": [
+                        "action"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "pot_sizings": {
+                    "default": false,
+                    "description": "Whether amounts use pot-relative encoding.",
+                    "type": "boolean"
+                  },
+                  "big_blind_size": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "description": "Big blind size for BB-relative scaling (0 for ante-only games)."
+                  },
+                  "big_blind_sizings": {
+                    "default": false,
+                    "description": "Whether amounts use big-blind-relative encoding.",
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              },
+              "big_blind": {
+                "description": "Big blind amount in smallest currency unit (0 for ante-only games).",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "ante": {
+                "description": "Ante per player in smallest currency unit.",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "dealer_seat": {
+                "description": "Button (dealer) seat number.",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "sb_seat": {
+                "description": "Small blind seat number.",
+                "type": "integer"
+              },
+              "bb_seat": {
+                "description": "Big blind seat number (-1 if not set).",
+                "type": "integer"
+              },
+              "game_type": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Human-readable game type (e.g. \"NLHE 6-max\")."
+              },
+              "game_type_code": {
+                "anyOf": [
+                  {
+                    "description": "Poker game variant types.",
+                    "enum": [
+                      "plo4",
+                      "plo5",
+                      "nlhe",
+                      "shortdeck",
+                      "unknown"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Standardized variant (NLHE, PLO4, PLO5, SHORTDECK)."
+              },
+              "game_group": {
+                "anyOf": [
+                  {
+                    "description": "Poker game format categories.",
+                    "enum": [
+                      "cash",
+                      "mtt",
+                      "spin",
+                      "private",
+                      "unknown"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Format category (CASH, MTT, PRIVATE)."
+              },
+              "date": {
+                "anyOf": [
+                  {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Hand timestamp (UTC)."
+              },
+              "roomid": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Poker room identifier."
+              },
+              "roomuuid": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Poker room UUID."
+              },
+              "straddle_seat": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Straddle seat (-1 or None = no straddle)."
+              },
+              "flop_pot": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Pot size at flop."
+              },
+              "turn_pot": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Pot size at turn."
+              },
+              "river_pot": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Pot size at river."
+              },
+              "final_pot": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Total pot at hand end."
+              },
+              "post_seats": {
+                "description": "Seats that posted out-of-turn blinds.",
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "currency": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "ISO 4217 currency code (USD, EUR, etc.)."
+              },
+              "small_blind": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Small blind amount (auto big_blind // 2 if None)."
+              },
+              "tournament_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Tournament identifier (None for cash games)."
+              },
+              "live_ante": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Button-posted full ante (short deck games)."
+              }
+            },
+            "required": [
+              "gameuuid",
+              "game_mode_code",
+              "players",
+              "actions",
+              "big_blind",
+              "ante",
+              "dealer_seat",
+              "sb_seat",
+              "bb_seat"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "game_hand"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "valid": {
+            "description": "True if the game hand passed all validation checks.",
+            "type": "boolean"
+          },
+          "errors": {
+            "description": "Validation error messages (must be fixed).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "warnings": {
+            "description": "Non-fatal warnings (hand is usable).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "summary": {
+            "description": "Human-readable summary of the validation result.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "valid",
+          "summary"
+        ],
+        "additionalProperties": false,
+        "description": "Result of dry-run validation on a GameHand JSON payload."
+      }
+    }
+  ],
+  "promptCount": 0,
+  "prompts": []
+}
