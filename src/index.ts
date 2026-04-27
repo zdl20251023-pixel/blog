@@ -8,12 +8,13 @@ import { articleController } from "./modules/article/controller"; // 文章控�
 import { commentController } from "./modules/comment/controller"; // 评论控制器
 import { demoController } from "./modules/demo/controller"; // 演示控制器
 import { userController } from "./modules/user/controller"; // 用户控制器
+import { vercelController } from "./modules/vercel/controller";
 
 const app = new Elysia()
   .use(swagger({
     version: "1.0.0",
     theme: "dark",
-    exclude: ["/"],
+    // exclude: ["/"],
     // 具体原因后面再查
     // exclude: ["/", "/api/article/detail"],  // 注：指定完整路径可以正常排除
     // exclude: ["/", "/^\/api\/article/"],  // 注：使用正则表达式排除，但是无法正常排除
@@ -69,6 +70,7 @@ const app = new Elysia()
     };
   })
   .use(demoController)
+  .use(vercelController)
   .use(userController)
   .use(articleController)
   .use(commentController)
